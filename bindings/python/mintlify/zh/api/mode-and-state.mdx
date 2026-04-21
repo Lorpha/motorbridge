@@ -220,6 +220,18 @@ with Controller("can0") as ctrl:
         print("未收到反馈")
 ```
 
+### 推荐反馈模式（当前 Binding）
+
+在循环中直接使用 `request_feedback()` + `get_state()` 即可；Python binding 不需要额外查询 “status name” 接口。
+
+```python
+motor.request_feedback()
+state = motor.get_state()
+if state is not None:
+    # status_code 是规范的机器可读状态值
+    print(state.status_code, state.pos, state.vel)
+```
+
 ### 状态代码解释
 
 状态代码是厂商特定的。常见模式：

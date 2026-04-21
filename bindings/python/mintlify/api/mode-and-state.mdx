@@ -223,6 +223,18 @@ with Controller("can0") as ctrl:
         print("No feedback received")
 ```
 
+### Recommended Feedback Pattern (Current Binding)
+
+Use `request_feedback()` + `get_state()` directly in the loop. No extra "status name" query call is required by the Python binding.
+
+```python
+motor.request_feedback()
+state = motor.get_state()
+if state is not None:
+    # status_code is the canonical machine-readable status value
+    print(state.status_code, state.pos, state.vel)
+```
+
 ### Status Code Interpretation
 
 Status codes are vendor-specific. Common patterns:

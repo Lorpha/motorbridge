@@ -392,6 +392,178 @@ Ping RobStride 电机以获取设备和响应者 ID。
 
 ---
 
+### `robstride_write_param_i8(param_id, value)`
+
+写入 RobStride 有符号 8 位参数。
+
+**参数：** `param_id: int`, `value: int`
+
+**返回：** `None`
+
+**抛出：** `CallError` 失败时
+
+---
+
+### `robstride_write_param_u8(param_id, value)`
+
+写入 RobStride 无符号 8 位参数。
+
+**参数：** `param_id: int`, `value: int`
+
+**返回：** `None`
+
+**抛出：** `CallError` 失败时
+
+---
+
+### `robstride_write_param_u16(param_id, value)`
+
+写入 RobStride 无符号 16 位参数。
+
+**参数：** `param_id: int`, `value: int`
+
+**返回：** `None`
+
+**抛出：** `CallError` 失败时
+
+---
+
+### `robstride_write_param_u32(param_id, value)`
+
+写入 RobStride 无符号 32 位参数。
+
+**参数：** `param_id: int`, `value: int`
+
+**返回：** `None`
+
+**抛出：** `CallError` 失败时
+
+---
+
+### `robstride_write_param_f32(param_id, value)`
+
+写入 RobStride 32 位浮点参数。
+
+**参数：** `param_id: int`, `value: float`
+
+**返回：** `None`
+
+**抛出：** `CallError` 失败时
+
+---
+
+### `robstride_get_param_i8(param_id, timeout_ms=1000)`
+
+读取 RobStride 有符号 8 位参数。
+
+**参数：** `param_id: int`, `timeout_ms: int = 1000`
+
+**返回：** `int`
+
+**抛出：** `CallError` 失败或超时时
+
+---
+
+### `robstride_get_param_u8(param_id, timeout_ms=1000)`
+
+读取 RobStride 无符号 8 位参数。
+
+**参数：** `param_id: int`, `timeout_ms: int = 1000`
+
+**返回：** `int`
+
+**抛出：** `CallError` 失败或超时时
+
+---
+
+### `robstride_get_param_u16(param_id, timeout_ms=1000)`
+
+读取 RobStride 无符号 16 位参数。
+
+**参数：** `param_id: int`, `timeout_ms: int = 1000`
+
+**返回：** `int`
+
+**抛出：** `CallError` 失败或超时时
+
+---
+
+### `robstride_get_param_u32(param_id, timeout_ms=1000)`
+
+读取 RobStride 无符号 32 位参数。
+
+**参数：** `param_id: int`, `timeout_ms: int = 1000`
+
+**返回：** `int`
+
+**抛出：** `CallError` 失败或超时时
+
+---
+
+### `robstride_get_param_f32(param_id, timeout_ms=1000)`
+
+读取 RobStride 32 位浮点参数。
+
+**参数：** `param_id: int`, `timeout_ms: int = 1000`
+
+**返回：** `float`
+
+**抛出：** `CallError` 失败或超时时
+
+---
+
+## 达妙 Typed 参数方法
+
+这些方法提供基于 `param_id` 的达妙参数读写路径。
+
+### `damiao_write_param_f32(param_id, value)`
+
+写入达妙 32 位浮点参数。
+
+**参数：** `param_id: int`, `value: float`
+
+**返回：** `None`
+
+**抛出：** `CallError` 失败时
+
+---
+
+### `damiao_write_param_u32(param_id, value)`
+
+写入达妙无符号 32 位参数。
+
+**参数：** `param_id: int`, `value: int`
+
+**返回：** `None`
+
+**抛出：** `CallError` 失败时
+
+---
+
+### `damiao_get_param_f32(param_id, timeout_ms=1000)`
+
+读取达妙 32 位浮点参数。
+
+**参数：** `param_id: int`, `timeout_ms: int = 1000`
+
+**返回：** `float`
+
+**抛出：** `CallError` 失败或超时时
+
+---
+
+### `damiao_get_param_u32(param_id, timeout_ms=1000)`
+
+读取达妙无符号 32 位参数。
+
+**参数：** `param_id: int`, `timeout_ms: int = 1000`
+
+**返回：** `int`
+
+**抛出：** `CallError` 失败或超时时
+
+---
+
 ## 另见
 
 - [Controller API](api/controller) - 控制器方法
