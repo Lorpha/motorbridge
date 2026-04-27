@@ -68,7 +68,7 @@ Security:\n\
             model = "rs-00".to_string();
         }
         if feedback_id == 0x11 {
-            feedback_id = 0xFF;
+            feedback_id = 0xFD;
         }
     } else if vendor == Vendor::Myactuator {
         if model == "4340P" || model == "4340" {

@@ -7,6 +7,7 @@ use crate::commands::{as_bool, as_u16, as_u64, parse_u32_hex_or_dec};
 
 fn parse_param_type(v: &Value) -> String {
     v.get("type")
+        .or_else(|| v.get("param_type"))
         .and_then(Value::as_str)
         .unwrap_or("f32")
         .to_lowercase()

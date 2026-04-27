@@ -436,17 +436,20 @@ impl RobstrideMotor {
                     .take()
                     .unwrap_or_else(|| u16::from_le_bytes([frame.data[0], frame.data[1]]));
                 let raw = decode_read_parameter_value(param_id, frame.data)?;
-                let info = parameter_info(param_id).ok_or_else(|| {
-                    MotorError::Protocol(format!("unknown RobStride parameter 0x{param_id:04X}"))
-                })?;
-                let value = match info.data_type {
-                    ParameterDataType::Int8 => ParameterValue::I8(raw[0] as i8),
-                    ParameterDataType::UInt8 => ParameterValue::U8(raw[0]),
-                    ParameterDataType::UInt16 => {
-                        ParameterValue::U16(u16::from_le_bytes([raw[0], raw[1]]))
+                let value = if let Some(info) = parameter_info(param_id) {
+                    match info.data_type {
+                        ParameterDataType::Int8 => ParameterValue::I8(raw[0] as i8),
+                        ParameterDataType::UInt8 => ParameterValue::U8(raw[0]),
+                        ParameterDataType::UInt16 => {
+                            ParameterValue::U16(u16::from_le_bytes([raw[0], raw[1]]))
+                        }
+                        ParameterDataType::UInt32 => ParameterValue::U32(u32::from_le_bytes(raw)),
+                        ParameterDataType::Float32 => ParameterValue::F32(f32::from_le_bytes(raw)),
                     }
-                    ParameterDataType::UInt32 => ParameterValue::U32(u32::from_le_bytes(raw)),
-                    ParameterDataType::Float32 => ParameterValue::F32(f32::from_le_bytes(raw)),
+                } else {
+                    // Tolerate unknown vendor firmware params instead of surfacing hard errors
+                    // in polling worker logs. Preserve raw payload as U32 for diagnostics.
+                    ParameterValue::U32(u32::from_le_bytes(raw))
                 };
                 ps.values.insert(param_id, value);
                 Ok(())

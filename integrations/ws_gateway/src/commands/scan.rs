@@ -23,7 +23,7 @@ fn cmd_scan_robstride(v: &Value, base: &Target) -> Result<Value, String> {
         return Err("end_id must be >= start_id".to_string());
     }
 
-    let feedback_ids = match v.get("feedback_ids") {
+    let requested_feedback_ids = match v.get("feedback_ids") {
         Some(Value::Array(arr)) => arr
             .iter()
             .filter_map(|x| {
@@ -33,25 +33,31 @@ fn cmd_scan_robstride(v: &Value, base: &Target) -> Result<Value, String> {
             })
             .collect::<Vec<u16>>(),
         Some(Value::String(s)) => parse_id_list_csv(s),
-        _ => vec![base.feedback_id, 0xFF, 0xFE, 0x00],
+        _ => vec![base.feedback_id],
     };
-    let feedback_ids = if feedback_ids.is_empty() {
-        vec![base.feedback_id, 0xFF, 0xFE, 0x00]
-    } else {
-        feedback_ids
+    let mut feedback_ids: Vec<u16> = Vec::new();
+    let mut push_unique = |id: u16| {
+        if !feedback_ids.contains(&id) {
+            feedback_ids.push(id);
+        }
     };
+    // Keep compatibility with the three common RobStride host IDs.
+    push_unique(0xFD);
+    push_unique(0xFF);
+    push_unique(0xFE);
+    push_unique(base.feedback_id);
+    for fid in requested_feedback_ids {
+        push_unique(fid);
+    }
 
     let mut hits = Vec::new();
+    let ctrl = open_robstride_controller(base, transport)?;
     for mid in start_id..=end_id {
         let mut found = None;
         for fid in &feedback_ids {
-            let ctrl = open_robstride_controller(base, transport)?;
             let motor = match ctrl.add_motor(mid, *fid, &base.model) {
                 Ok(m) => m,
-                Err(_) => {
-                    let _ = ctrl.close_bus();
-                    continue;
-                }
+                Err(_) => continue,
             };
             if let Ok(p) = motor.ping(Duration::from_millis(timeout_ms)) {
                 found = Some(json!({
@@ -61,7 +67,6 @@ fn cmd_scan_robstride(v: &Value, base: &Target) -> Result<Value, String> {
                     "device_id": p.device_id,
                     "responder_id": p.responder_id
                 }));
-                let _ = ctrl.close_bus();
                 break;
             }
             if let Ok(val) = motor.get_parameter_f32(param_id, Duration::from_millis(timeout_ms)) {
@@ -72,15 +77,14 @@ fn cmd_scan_robstride(v: &Value, base: &Target) -> Result<Value, String> {
                     "param_id": format!("0x{param_id:04X}"),
                     "value": val
                 }));
-                let _ = ctrl.close_bus();
                 break;
             }
-            let _ = ctrl.close_bus();
         }
         if let Some(hit) = found {
             hits.push(hit);
         }
     }
+    let _ = ctrl.close_bus();
 
     Ok(json!({
         "vendor": "robstride",

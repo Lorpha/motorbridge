@@ -73,7 +73,7 @@ fn handle_set_target(v: &Value, ctx: &mut SessionCtx) -> Result<Value, String> {
             next.model = "rs-00".to_string();
         }
         if next.feedback_id == 0x11 {
-            next.feedback_id = 0xFF;
+            next.feedback_id = 0xFD;
         }
     } else if next.vendor == Vendor::Myactuator {
         if next.model == "4340" || next.model == "4340P" {

@@ -112,7 +112,7 @@
         <span id="selectedInfo" class="pill">当前目标：未选择</span>
       </div>
       <div class="muted" style="margin-top:8px;">
-        网关先启动后再连：<code>cargo run -p ws_gateway --release -- --listen 127.0.0.1:9002 --vendor damiao --channel can0 --model 4340P --motor-id 1 --feedback-id 0x11</code>
+        网关先启动后再连：<code>cargo run -p ws_gateway --release -- --bind 127.0.0.1:9002 --vendor damiao --channel can0 --model 4340P --motor-id 1 --feedback-id 0x11</code>
       </div>
     </div>
 
@@ -134,9 +134,9 @@
         </div>
         <div class="row">
           <label>RobStride Model</label>
-          <input id="robModel" value="rs-06" size="8" />
+          <input id="robModel" value="rs-00" size="8" />
           <label>Rob feedback</label>
-          <input id="robFids" value="0xFF,0xFE,0x00" size="14" />
+          <input id="robFids" value="0xFD,0xFF,0xFE" size="14" />
           <button id="btnScanRob">扫 RobStride</button>
         </div>
       </div>
@@ -348,7 +348,7 @@
           added += 1;
         } else if (vendor === "robstride") {
           const motor_id = toU16(h.device_id ?? h.probe, 0);
-          const feedback_id = toU16(h.feedback_id, 0xFF);
+          const feedback_id = toU16(h.feedback_id, 0xFD);
           if (!motor_id) continue;
           upsertDevice({
             vendor: "robstride",
@@ -457,11 +457,11 @@
         op: "scan",
         vendor: "robstride",
         channel: $("scanChannel").value.trim() || "can0",
-        model: $("robModel").value.trim() || "rs-06",
+        model: $("robModel").value.trim() || "rs-00",
         start_id: toNum($("scanStart").value, 1),
         end_id: toNum($("scanEnd").value, 255),
-        feedback_ids: $("robFids").value.trim() || "0xFF,0xFE,0x00",
-        timeout_ms: 120,
+        feedback_ids: $("robFids").value.trim() || "0xFD,0xFF,0xFE",
+        timeout_ms: 300,
       });
     };
 
@@ -556,7 +556,7 @@
 
     [
       { vendor: "damiao", motor_id: 1, feedback_id: 0x11, model: "4340P", source: "preset" },
-      { vendor: "robstride", motor_id: 127, feedback_id: 0xFF, model: "rs-06", source: "preset" },
+      { vendor: "robstride", motor_id: 127, feedback_id: 0xFD, model: "rs-00", source: "preset" },
     ].forEach(upsertDevice);
     selectedKey = "damiao:1";
     renderDevices();

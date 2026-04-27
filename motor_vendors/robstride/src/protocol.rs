@@ -115,11 +115,7 @@ pub fn decode_ping_reply(arbitration_id: u32, data: [u8; 8]) -> Result<PingReply
 }
 
 pub fn decode_read_parameter_value(param_id: u16, payload: [u8; 8]) -> Result<[u8; 4]> {
-    if parameter_info(param_id).is_none() {
-        return Err(MotorError::InvalidArgument(format!(
-            "unknown RobStride parameter 0x{param_id:04X}"
-        )));
-    }
+    let _ = param_id;
     Ok([payload[4], payload[5], payload[6], payload[7]])
 }
 
@@ -221,10 +217,11 @@ mod tests {
     }
 
     #[test]
-    fn read_parameter_decode_rejects_unknown_id() {
+    fn read_parameter_decode_accepts_unknown_id() {
         let payload = [0u8; 8];
         let ok = decode_read_parameter_value(0x7019, payload).expect("known param");
         assert_eq!(ok, [0, 0, 0, 0]);
-        assert!(decode_read_parameter_value(0xDEAD, payload).is_err());
+        let unknown = decode_read_parameter_value(0xDEAD, payload).expect("unknown param should pass raw");
+        assert_eq!(unknown, [0, 0, 0, 0]);
     }
 }
