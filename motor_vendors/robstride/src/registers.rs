@@ -38,6 +38,11 @@ pub enum ParameterId {
     EpscanTime = 0x7026,
     CanTimeout = 0x7028,
     ZeroState = 0x7029,
+    Damper = 0x702A,
+    AddOffset = 0x702B,
+    AlveolousOpen = 0x702C,
+    IqTest = 0x702D,
+    DccSet = 0x702E,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -149,32 +154,82 @@ pub static PARAMETER_TABLE: &[ParameterInfo] = &[
     param!(0x3042, "Tqcalc_Type", UInt8),
     param!(0x3043, "low_position", Float32),
     param!(0x3044, "H", UInt8),
-    param!(0x7005, "run_mode", Int8),
-    param!(0x7006, "iq_ref", Float32),
-    param!(0x700A, "spd_ref", Float32),
-    param!(0x700B, "limit_torque", Float32),
-    param!(0x7010, "cur_kp", Float32),
-    param!(0x7011, "cur_ki", Float32),
-    param!(0x7014, "cur_filter_gain", Float32),
-    param!(0x7016, "loc_ref", Float32),
-    param!(0x7017, "limit_spd", Float32),
-    param!(0x7018, "limit_cur", Float32),
-    param!(0x7019, "mechPos", Float32),
-    param!(0x701A, "iqf", Float32),
-    param!(0x701B, "mechVel", Float32),
-    param!(0x701C, "VBUS", Float32),
-    param!(0x701E, "loc_kp", Float32),
-    param!(0x701F, "spd_kp", Float32),
-    param!(0x7020, "spd_ki", Float32),
-    param!(0x7021, "spd_filter_gain", Float32),
-    param!(0x7022, "acc_rad", Float32),
-    param!(0x7024, "vel_max", Float32),
-    param!(0x7025, "acc_set", Float32),
-    param!(0x7026, "EPScan_time", UInt16),
-    param!(0x7028, "canTimeout", UInt32),
-    param!(0x7029, "zero_sta", UInt8),
+    // RobStride protocol section 4 "read/write single parameter list".
+    // Wire format: index is little-endian in byte0..1, value is little-endian
+    // in byte4..7. Writes use communication type 18; parameters that must
+    // persist after power-cycle require communication type 22 save afterwards.
+    param!(0x7005, "run_mode", Int8), // 0 MIT, 1 PP, 2 velocity, 3 current, 5 CSP
+    param!(0x7006, "iq_ref", Float32), // A, current-mode Iq target
+    param!(0x700A, "spd_ref", Float32), // rad/s, velocity-mode target
+    param!(0x700B, "limit_torque", Float32), // Nm, torque limit
+    param!(0x7010, "cur_kp", Float32), // current-loop Kp
+    param!(0x7011, "cur_ki", Float32), // current-loop Ki
+    param!(0x7014, "cur_filter_gain", Float32), // 0..1, current filter gain
+    param!(0x7016, "loc_ref", Float32), // rad, position target
+    param!(0x7017, "limit_spd", Float32), // rad/s, CSP position speed limit
+    param!(0x7018, "limit_cur", Float32), // A, velocity/position current limit
+    param!(0x7019, "mechPos", Float32), // rad, load-side counted mechanical angle
+    param!(0x701A, "iqf", Float32),   // A, filtered iq
+    param!(0x701B, "mechVel", Float32), // rad/s, load-side velocity
+    param!(0x701C, "VBUS", Float32),  // V, bus voltage
+    param!(0x701E, "loc_kp", Float32), // position-loop Kp
+    param!(0x701F, "spd_kp", Float32), // speed-loop Kp
+    param!(0x7020, "spd_ki", Float32), // speed-loop Ki
+    param!(0x7021, "spd_filter_gain", Float32), // speed filter gain
+    param!(0x7022, "acc_rad", Float32), // rad/s^2, velocity-mode acceleration
+    param!(0x7024, "vel_max", Float32), // rad/s, PP mode velocity
+    param!(0x7025, "acc_set", Float32), // rad/s^2, PP mode acceleration
+    param!(0x7026, "EPScan_time", UInt16), // report period: 1=10ms, +1 adds 5ms
+    param!(0x7028, "canTimeout", UInt32), // CAN timeout, 20000 means 1s
+    param!(0x7029, "zero_sta", UInt8), // 0: 0..2pi, 1: -pi..pi; save with type 22
+    param!(0x702A, "damper", UInt8),  // 1 disables power-off back-drive damping
+    param!(0x702B, "add_offset", Float32), // rad, zero offset
+    param!(0x702C, "alveolous_open", UInt8), // cogging compensation enable
+    param!(0x702D, "iq_test", UInt8), // initialization calibration switch
+    param!(0x702E, "dcc_set", Float32), // rad/s^2, PP-mode deceleration
 ];
 
 pub fn parameter_info(id: u16) -> Option<&'static ParameterInfo> {
     PARAMETER_TABLE.iter().find(|info| info.id == id)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn section4_runtime_parameter_list_is_complete() {
+        let expected = [
+            0x7005, 0x7006, 0x700A, 0x700B, 0x7010, 0x7011, 0x7014, 0x7016, 0x7017, 0x7018, 0x7019,
+            0x701A, 0x701B, 0x701C, 0x701E, 0x701F, 0x7020, 0x7021, 0x7022, 0x7024, 0x7025, 0x7026,
+            0x7028, 0x7029, 0x702A, 0x702B, 0x702C, 0x702D, 0x702E,
+        ];
+        for id in expected {
+            assert!(parameter_info(id).is_some(), "missing 0x{id:04X}");
+        }
+    }
+
+    #[test]
+    fn newly_added_section4_parameters_have_expected_types() {
+        assert_eq!(
+            parameter_info(0x702A).unwrap().data_type,
+            ParameterDataType::UInt8
+        );
+        assert_eq!(
+            parameter_info(0x702B).unwrap().data_type,
+            ParameterDataType::Float32
+        );
+        assert_eq!(
+            parameter_info(0x702C).unwrap().data_type,
+            ParameterDataType::UInt8
+        );
+        assert_eq!(
+            parameter_info(0x702D).unwrap().data_type,
+            ParameterDataType::UInt8
+        );
+        assert_eq!(
+            parameter_info(0x702E).unwrap().data_type,
+            ParameterDataType::Float32
+        );
+    }
 }
