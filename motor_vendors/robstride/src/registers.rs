@@ -13,10 +13,18 @@ pub enum ParameterDataType {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(u16)]
 pub enum ParameterId {
-    MechanicalOffset = 0x2005,
-    MeasuredPosition = 0x3016,
-    MeasuredVelocity = 0x3017,
-    MeasuredTorque = 0x302C,
+    // Manual function-code examples kept for cross-checking the RS00-RS06
+    // tables below. They are model-specific factory/diagnostic entries, not
+    // part of the common runtime control parameter set from manual section 4.
+    // MechanicalOffset = 0x2005,
+    // MeasuredPosition = 0x3016,
+    // MeasuredVelocity = 0x3017,
+    // MeasuredTorque = 0x302C,
+
+    // Common runtime control/readback parameters from the RobStride protocol
+    // single-parameter list (0x7005..0x702E). High-level control paths should
+    // use these IDs; model-specific 0x2000/0x3000 tables remain below for
+    // explicit read/write lookup and diagnostics.
     Mode = 0x7005,
     IqTarget = 0x7006,
     VelocityTarget = 0x700A,
@@ -143,18 +151,28 @@ mod tests {
     use super::*;
 
     #[test]
-    fn rs00_uses_dedicated_manual_parameter_table() {
-        let encoder = parameter_info_for_model("rs-00", 0x3004).expect("rs00 encoderRaw");
-        assert_eq!(encoder.name, "encoderRaw");
-        assert_eq!(encoder.data_type, ParameterDataType::Int16);
-
-        let tail = parameter_info_for_model("rs00", 0x304F).expect("rs00 H");
-        assert_eq!(tail.name, "H");
-        assert_eq!(tail.data_type, ParameterDataType::UInt8);
+    fn model_tables_keep_only_runtime_control_parameters_active() {
+        for model in [
+            "rs-00", "rs-01", "rs-02", "rs-03", "rs-04", "rs-05", "rs-06",
+        ] {
+            assert!(
+                parameter_info_for_model(model, 0x2005).is_none(),
+                "{model} 0x2005 should stay comment-only"
+            );
+            assert!(
+                parameter_info_for_model(model, 0x3004).is_none(),
+                "{model} 0x3004 should stay comment-only"
+            );
+            assert!(
+                parameter_info_for_model(model, 0x302C).is_none(),
+                "{model} 0x302C should stay comment-only"
+            );
+        }
     }
 
     #[test]
-    fn model_without_manual_table_keeps_only_common_control_parameters() {
+    fn unknown_model_keeps_only_common_control_parameters() {
+        assert!(parameter_info_for_model("rs-99", 0x2005).is_none());
         assert!(parameter_info_for_model("rs-99", 0x3004).is_none());
         assert_eq!(
             parameter_info_for_model("rs-99", 0x7019)
@@ -165,92 +183,17 @@ mod tests {
     }
 
     #[test]
-    fn rs01_uses_dedicated_manual_parameter_table() {
-        let protocol = parameter_info_for_model("rs-01", 0x2020).expect("rs01 protocol_1");
-        assert_eq!(protocol.name, "protocol_1");
-        assert_eq!(protocol.data_type, ParameterDataType::UInt8);
+    fn model_tables_still_resolve_runtime_parameters() {
+        for model in [
+            "rs-00", "rs-01", "rs-02", "rs-03", "rs-04", "rs-05", "rs-06",
+        ] {
+            let mode = parameter_info_for_model(model, 0x7005).expect("run_mode");
+            assert_eq!(mode.name, "run_mode");
+            assert_eq!(mode.data_type, ParameterDataType::Int8);
 
-        let elec = parameter_info_for_model("rs01", 0x302C).expect("rs01 ElecOffset");
-        assert_eq!(elec.name, "ElecOffset");
-        assert_eq!(elec.data_type, ParameterDataType::Float32);
-
-        let theta = parameter_info_for_model("rs-01", 0x303B).expect("rs01 theta_mech_1");
-        assert_eq!(theta.name, "theta_mech_1");
-        assert_eq!(theta.data_type, ParameterDataType::Float32);
-    }
-
-    #[test]
-    fn rs02_uses_dedicated_manual_parameter_table() {
-        let zero = parameter_info_for_model("rs-02", 0x201E).expect("rs02 zero_sta");
-        assert_eq!(zero.name, "zero_sta");
-        assert_eq!(zero.data_type, ParameterDataType::UInt8);
-
-        let angle = parameter_info_for_model("rs02", 0x3030).expect("rs02 motor_mech_angle");
-        assert_eq!(angle.name, "motor_mech_angle");
-        assert_eq!(angle.data_type, ParameterDataType::Float32);
-
-        let status = parameter_info_for_model("rs-02", 0x3048).expect("rs02 can_status");
-        assert_eq!(status.name, "can_status");
-        assert_eq!(status.data_type, ParameterDataType::UInt8);
-    }
-
-    #[test]
-    fn rs06_uses_dedicated_manual_parameter_table() {
-        let can_id = parameter_info_for_model("rs-06", 0x2009).expect("rs06 CAN_ID");
-        assert_eq!(can_id.name, "CAN_ID");
-        assert_eq!(can_id.data_type, ParameterDataType::UInt8);
-
-        let angle = parameter_info_for_model("rs06", 0x3028).expect("rs06 as_angle");
-        assert_eq!(angle.name, "as_angle");
-        assert_eq!(angle.data_type, ParameterDataType::Float32);
-
-        let end = parameter_info_for_model("rs-06", 0x3048).expect("rs06 pos_cnt1");
-        assert_eq!(end.name, "pos_cnt1");
-        assert_eq!(end.data_type, ParameterDataType::UInt16);
-    }
-
-    #[test]
-    fn rs03_uses_dedicated_manual_parameter_table() {
-        let offset = parameter_info_for_model("rs-03", 0x2024).expect("rs03 position_offset");
-        assert_eq!(offset.name, "position_offset");
-        assert_eq!(offset.data_type, ParameterDataType::UInt8);
-
-        let angle = parameter_info_for_model("rs03", 0x3027).expect("rs03 as_angle");
-        assert_eq!(angle.name, "as_angle");
-        assert_eq!(angle.data_type, ParameterDataType::Float32);
-
-        let status = parameter_info_for_model("rs-03", 0x3041).expect("rs03 can_status");
-        assert_eq!(status.name, "can_status");
-        assert_eq!(status.data_type, ParameterDataType::UInt8);
-    }
-
-    #[test]
-    fn rs04_uses_dedicated_manual_parameter_table() {
-        let pp_vel = parameter_info_for_model("rs-04", 0x201B).expect("rs04 vel_max");
-        assert_eq!(pp_vel.name, "vel_max");
-        assert_eq!(pp_vel.data_type, ParameterDataType::Float32);
-
-        let ibus = parameter_info_for_model("rs04", 0x302B).expect("rs04 ibus");
-        assert_eq!(ibus.name, "ibus");
-        assert_eq!(ibus.data_type, ParameterDataType::Float32);
-
-        let coder = parameter_info_for_model("rs-04", 0x3047).expect("rs04 coder_reg");
-        assert_eq!(coder.name, "coder_reg");
-        assert_eq!(coder.data_type, ParameterDataType::UInt16);
-    }
-
-    #[test]
-    fn rs05_uses_dedicated_manual_parameter_table() {
-        let protocol = parameter_info_for_model("rs-05", 0x2022).expect("rs05 protocol_1");
-        assert_eq!(protocol.name, "protocol_1");
-        assert_eq!(protocol.data_type, ParameterDataType::UInt8);
-
-        let cs_angle = parameter_info_for_model("rs05", 0x3035).expect("rs05 cs_angle");
-        assert_eq!(cs_angle.name, "cs_angle");
-        assert_eq!(cs_angle.data_type, ParameterDataType::Float32);
-
-        let h = parameter_info_for_model("rs-05", 0x304E).expect("rs05 H");
-        assert_eq!(h.name, "H");
-        assert_eq!(h.data_type, ParameterDataType::UInt8);
+            let pos = parameter_info_for_model(model, 0x7019).expect("mechPos");
+            assert_eq!(pos.name, "mechPos");
+            assert_eq!(pos.data_type, ParameterDataType::Float32);
+        }
     }
 }
