@@ -5,7 +5,6 @@ from pathlib import Path
 
 from setuptools import Distribution, find_packages, setup
 from setuptools.command.build_py import build_py as _build_py
-from setuptools.command.sdist import sdist as _sdist
 
 
 def _platform_lib_name() -> str:
@@ -76,40 +75,6 @@ def _resolve_abi_path() -> Path:
     )
 
 
-def _stage_runtime_artifacts() -> list[tuple[Path, bool]]:
-    staged: list[tuple[Path, bool]] = []
-    here = Path(__file__).resolve().parent
-
-    abi_src = _resolve_abi_path()
-    abi_dst_dir = here / "src" / "motorbridge" / "lib"
-    abi_dst_dir.mkdir(parents=True, exist_ok=True)
-    abi_dst = abi_dst_dir / abi_src.name
-    staged.append((abi_dst, abi_dst.exists()))
-    shutil.copy2(abi_src, abi_dst)
-
-    gateway_src = _resolve_gateway_path()
-    gateway_dst_dir = here / "src" / "motorbridge" / "bin"
-    gateway_dst_dir.mkdir(parents=True, exist_ok=True)
-    gateway_dst = gateway_dst_dir / gateway_src.name
-    staged.append((gateway_dst, gateway_dst.exists()))
-    shutil.copy2(gateway_src, gateway_dst)
-    try:
-        gateway_dst.chmod(0o755)
-    except OSError:
-        pass
-
-    return staged
-
-
-def _cleanup_staged_artifacts(staged: list[tuple[Path, bool]]) -> None:
-    for path, existed_before in staged:
-        if not existed_before:
-            try:
-                path.unlink()
-            except FileNotFoundError:
-                pass
-
-
 class BuildPyWithAbi(_build_py):
     def run(self):
         super().run()
@@ -128,15 +93,6 @@ class BuildPyWithAbi(_build_py):
         except OSError:
             # Windows may not honor POSIX mode bits; keep best effort.
             pass
-
-
-class SdistWithRuntimeArtifacts(_sdist):
-    def run(self):
-        staged = _stage_runtime_artifacts()
-        try:
-            super().run()
-        finally:
-            _cleanup_staged_artifacts(staged)
 
 
 class BinaryDistribution(Distribution):
@@ -164,6 +120,6 @@ setup(
         ]
     },
     distclass=BinaryDistribution,
-    cmdclass={"build_py": BuildPyWithAbi, "sdist": SdistWithRuntimeArtifacts},
+    cmdclass={"build_py": BuildPyWithAbi},
     zip_safe=False,
 )
