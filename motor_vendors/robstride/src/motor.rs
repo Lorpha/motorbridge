@@ -63,6 +63,13 @@ const ROBSTRIDE_MODELS: &[MotorModelSpec] = &[
         vmax: 20.0,
         tmax: 60.0,
     },
+    MotorModelSpec {
+        vendor: "robstride",
+        model: "el-05",
+        pmax: 4.0 * std::f32::consts::PI,
+        vmax: 50.0,
+        tmax: 6.0,
+    },
 ];
 
 const ROBSTRIDE_CATALOG: StaticModelCatalog = StaticModelCatalog {
@@ -137,7 +144,7 @@ impl RobstrideMotor {
             MotorError::InvalidArgument(format!("unknown RobStride model: {model}"))
         })?;
         let (kp_max, kd_max) = match model {
-            "rs-00" | "rs-01" | "rs-02" | "rs-05" => (500.0, 5.0),
+            "rs-00" | "rs-01" | "rs-02" | "rs-05" | "el-05" => (500.0, 5.0),
             "rs-03" | "rs-04" | "rs-06" => (5000.0, 100.0),
             _ => (500.0, 5.0),
         };
