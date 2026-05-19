@@ -1,6 +1,8 @@
 use crate::motor::RobstrideMotor;
 use motor_core::bus::{open_socketcan, open_socketcanfd, CanBus};
+use motor_core::dm_serial::DmSerialBus;
 use motor_core::error::Result;
+use motor_core::robstride_serial::RobstrideSerialBus;
 use motor_core::vendor_controller::VendorController;
 use std::sync::Arc;
 
@@ -21,6 +23,16 @@ impl RobstrideController {
 
     pub fn new_socketcanfd(channel: &str) -> Result<Self> {
         Ok(Self::new(open_socketcanfd(channel)?))
+    }
+
+    pub fn new_robstride_serial(port: &str, baud: u32) -> Result<Self> {
+        let bus: Arc<dyn CanBus> = Arc::new(RobstrideSerialBus::open(port, baud)?);
+        Ok(Self::new(bus))
+    }
+
+    pub fn new_dm_serial(port: &str, baud: u32) -> Result<Self> {
+        let bus: Arc<dyn CanBus> = Arc::new(DmSerialBus::open(port, baud)?);
+        Ok(Self::new(bus))
     }
 
     pub fn add_motor(

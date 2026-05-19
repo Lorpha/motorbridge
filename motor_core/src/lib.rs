@@ -6,6 +6,7 @@ pub mod error;
 pub mod model;
 #[cfg(any(target_os = "windows", target_os = "macos"))]
 pub mod pcan;
+pub mod robstride_serial;
 pub mod socketcan;
 #[cfg(target_os = "linux")]
 pub mod socketcanfd;

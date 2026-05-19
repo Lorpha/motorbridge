@@ -69,6 +69,54 @@ pub extern "C" fn motor_controller_new_dm_serial(
 }
 
 #[unsafe(no_mangle)]
+pub extern "C" fn motor_controller_new_robstride_serial(
+    serial_port: *const c_char,
+    baud: u32,
+) -> *mut MotorController {
+    let serial_port = match parse_cstr(serial_port, "serial_port") {
+        Ok(v) => v,
+        Err(e) => {
+            set_last_error(e);
+            return ptr::null_mut();
+        }
+    };
+    let controller = match RobstrideController::new_robstride_serial(&serial_port, baud) {
+        Ok(c) => c,
+        Err(e) => {
+            set_last_error(e.to_string());
+            return ptr::null_mut();
+        }
+    };
+    Box::into_raw(Box::new(MotorController {
+        inner: ControllerInner::Robstride(controller),
+    }))
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn motor_controller_new_robstride_dm_serial(
+    serial_port: *const c_char,
+    baud: u32,
+) -> *mut MotorController {
+    let serial_port = match parse_cstr(serial_port, "serial_port") {
+        Ok(v) => v,
+        Err(e) => {
+            set_last_error(e);
+            return ptr::null_mut();
+        }
+    };
+    let controller = match RobstrideController::new_dm_serial(&serial_port, baud) {
+        Ok(c) => c,
+        Err(e) => {
+            set_last_error(e.to_string());
+            return ptr::null_mut();
+        }
+    };
+    Box::into_raw(Box::new(MotorController {
+        inner: ControllerInner::Robstride(controller),
+    }))
+}
+
+#[unsafe(no_mangle)]
 pub extern "C" fn motor_controller_free(controller: *mut MotorController) {
     if controller.is_null() {
         return;
