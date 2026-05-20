@@ -15,13 +15,15 @@ Unified CAN motor control stack with a vendor-agnostic Rust core, stable C ABI, 
 - `motorbridge-studio`: https://github.com/tianrking/motorbridge-studio
   Standalone web control UI built on top of `ws_gateway`.
 
-## Update (2026-05): v0.3.2
+## Update (2026-05): v0.3.4
 
-- `v0.3.2` fixes RobStride fault-report handling.
-- RobStride `FAULT_REPORT` frames no longer overwrite the latest motion state
-  or masquerade as command acknowledgements.
-- C ABI and Python SDK now expose cached RobStride fault diagnostics through
-  `robstride_get_fault_report()`.
+- `v0.3.4` fixes RobStride parameter-save acknowledgement handling for
+  firmware that replies to `SAVE_PARAMETERS` with a valid non-status device
+  response.
+- Damiao `ensure_mode` is more robust on timing-sensitive links such as
+  `dm-serial`.
+- `ws_gateway` now honors Damiao `dm-serial` transport during `set_id`.
+- Strict Clippy is clean, and WS/RobStride manual protocol/test docs were added.
 
 ## Transport Legend
 

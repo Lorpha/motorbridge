@@ -41,9 +41,10 @@
 
 ## 范围
 
-- 当前目标包版本：`0.3.2`。
-- `0.3.2` 修复 RobStride 故障帧处理。故障帧不再污染运动反馈，
-  并且 `Motor.robstride_get_fault_report()` 可以返回缓存的 raw fault/warning 诊断值。
+- 当前目标包版本：`0.3.4`。
+- `0.3.4` 修复 RobStride 参数保存 ACK 兼容性，增强 Damiao
+  `ensure_mode` 在时序敏感链路上的可靠性，修复 `ws_gateway` 中 Damiao
+  `dm-serial` 改 ID 走错传输的问题，并补充 WS/RobStride 手测文档。
 - 高层 API: `Controller`、`Motor`、`Mode`
 - CLI: `motorbridge-cli`
 - 网关启动命令（pip 安装后进入 PATH）：

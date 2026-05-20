@@ -15,11 +15,13 @@
 - `motorbridge-studio`：https://github.com/tianrking/motorbridge-studio
   基于 `ws_gateway` 的独立 Web 控制台。
 
-## 更新说明（2026-05）：v0.3.2
+## 更新说明（2026-05）：v0.3.4
 
-- `v0.3.2` 修复 RobStride 故障帧处理。
-- RobStride `FAULT_REPORT` 不再覆盖最近一次真实运动状态，也不会再被当成控制 ACK。
-- C ABI 和 Python SDK 现在可以通过 `robstride_get_fault_report()` 查询缓存的故障诊断值。
+- `v0.3.4` 修复 RobStride 参数保存 ACK 兼容性，适配
+  `SAVE_PARAMETERS` 后返回非 status 但有效设备回复的固件。
+- Damiao `ensure_mode` 在 `dm-serial` 等时序敏感链路上更稳。
+- `ws_gateway` 的 Damiao `set_id` 现在会正确遵守 `dm-serial` transport。
+- 严格 Clippy 已清理通过，并新增 WS 协议与 RobStride 手测文档。
 
 ## 传输链路标识
 

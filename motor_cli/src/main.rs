@@ -18,6 +18,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         print_help();
         return Ok(());
     }
+    if args.contains_key("version") {
+        println!("motor_cli {}", env!("CARGO_PKG_VERSION"));
+        return Ok(());
+    }
 
     let vendor = get_str(&args, "vendor", "damiao");
     let channel = get_str(&args, "channel", "can0");
@@ -54,9 +58,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             "ping"
         } else if vendor == "hightorque" {
             "read"
-        } else if vendor == "myactuator" {
-            "status"
-        } else if vendor == "hexfellow" {
+        } else if vendor == "myactuator" || vendor == "hexfellow" {
             "status"
         } else if vendor == "all" {
             "scan"
