@@ -8,6 +8,7 @@ macro_rules! dispatch_controller {
             ControllerInner::MyActuator(ctrl) => ctrl.$method().map_err(|e| e.to_string()),
             ControllerInner::Robstride(ctrl) => ctrl.$method().map_err(|e| e.to_string()),
             ControllerInner::Hightorque(ctrl) => ctrl.$method().map_err(|e| e.to_string()),
+            ControllerInner::Mixed(ctrl) => ctrl.$method().map_err(|e| e.to_string()),
             ControllerInner::Unbound(_) => Ok(()),
         }
     };
@@ -113,6 +114,51 @@ pub extern "C" fn motor_controller_new_robstride_dm_serial(
     };
     Box::into_raw(Box::new(MotorController {
         inner: ControllerInner::Robstride(controller),
+    }))
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn motor_controller_new_dm_serial_mixed(
+    serial_port: *const c_char,
+    baud: u32,
+) -> *mut MotorController {
+    let serial_port = match parse_cstr(serial_port, "serial_port") {
+        Ok(v) => v,
+        Err(e) => {
+            set_last_error(e);
+            return ptr::null_mut();
+        }
+    };
+    let bus: Arc<dyn CanBus> = match DmSerialBus::open(&serial_port, baud) {
+        Ok(b) => Arc::new(b),
+        Err(e) => {
+            set_last_error(e.to_string());
+            return ptr::null_mut();
+        }
+    };
+    Box::into_raw(Box::new(MotorController {
+        inner: ControllerInner::Mixed(CoreController::new(bus)),
+    }))
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn motor_controller_new_mixed(channel: *const c_char) -> *mut MotorController {
+    let channel = match parse_cstr(channel, "channel") {
+        Ok(v) => v,
+        Err(e) => {
+            set_last_error(e);
+            return ptr::null_mut();
+        }
+    };
+    let bus = match motor_core::bus::open_socketcan(&channel) {
+        Ok(b) => b,
+        Err(e) => {
+            set_last_error(e.to_string());
+            return ptr::null_mut();
+        }
+    };
+    Box::into_raw(Box::new(MotorController {
+        inner: ControllerInner::Mixed(CoreController::new(bus)),
     }))
 }
 

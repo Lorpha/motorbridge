@@ -7,6 +7,14 @@ Versioning.
 
 ## [Unreleased]
 
+### Added
+
+- Added mixed-vendor controller support for both serial and socketcan transports:
+  - `Controller.from_dm_serial_mixed(port, baud)` — allows mixing vendors (DaMiao, RobStride, Hexfellow, etc.) on dm_serial transport
+  - `Controller.from_mixed(channel)` — allows mixing vendors on socketcan transport
+  - C ABI: `motor_controller_new_dm_serial_mixed()` and `motor_controller_new_mixed()`
+- Added `add_hightorque_motor()` support to mixed-vendor controllers
+
 ## [0.3.4] - 2026-05-20
 
 ### Added

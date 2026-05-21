@@ -96,6 +96,10 @@ class Abi:
         lib.motor_controller_new_robstride_serial.restype = c_void_p
         lib.motor_controller_new_robstride_dm_serial.argtypes = [c_char_p, c_uint32]
         lib.motor_controller_new_robstride_dm_serial.restype = c_void_p
+        lib.motor_controller_new_dm_serial_mixed.argtypes = [c_char_p, c_uint32]
+        lib.motor_controller_new_dm_serial_mixed.restype = c_void_p
+        lib.motor_controller_new_mixed.argtypes = [c_char_p]
+        lib.motor_controller_new_mixed.restype = c_void_p
         lib.motor_controller_free.argtypes = [c_void_p]
         lib.motor_controller_poll_feedback_once.argtypes = [c_void_p]
         lib.motor_controller_poll_feedback_once.restype = c_int32

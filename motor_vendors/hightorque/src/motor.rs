@@ -16,7 +16,7 @@ pub struct HightorqueMotor {
 }
 
 impl HightorqueMotor {
-    pub(crate) fn new(motor_id: u16, feedback_id: u16, model: &str, bus: Arc<dyn CanBus>) -> Self {
+    pub fn new(motor_id: u16, feedback_id: u16, model: &str, bus: Arc<dyn CanBus>) -> Self {
         Self {
             motor_id,
             feedback_id,

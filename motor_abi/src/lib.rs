@@ -1,3 +1,7 @@
+use motor_core::bus::CanBus;
+use motor_core::controller::CoreController;
+use motor_core::device::MotorDevice;
+use motor_core::dm_serial::DmSerialBus;
 use motor_vendor_damiao::{ControlMode as DamiaoControlMode, DamiaoController, DamiaoMotor};
 use motor_vendor_hexfellow::{
     HexfellowController, HexfellowMotor, MitTarget as HexfellowMitTarget,
@@ -67,6 +71,7 @@ enum ControllerInner {
     MyActuator(MyActuatorController),
     Robstride(RobstrideController),
     Hightorque(HightorqueController),
+    Mixed(CoreController),
 }
 
 enum MotorHandleInner {
@@ -155,6 +160,7 @@ fn controller_vendor_name(inner: &ControllerInner) -> &'static str {
         ControllerInner::Robstride(_) => "RobStride",
         ControllerInner::Hightorque(_) => "HighTorque",
         ControllerInner::Unbound(_) => "Unbound",
+        ControllerInner::Mixed(_) => "Mixed",
     }
 }
 

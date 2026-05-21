@@ -61,6 +61,30 @@ class Controller:
             raise CallError(f"new_robstride_dm_serial failed: {_err_text()}")
         return self
 
+    @classmethod
+    def from_dm_serial_mixed(cls, serial_port: str = "/dev/ttyACM0", baud: int = 921600) -> "Controller":
+        """Create a mixed-vendor controller over dm_serial transport.
+
+        Unlike single-vendor constructors, this allows adding motors from
+        any vendor (damiao, robstride, hexfellow, etc.) on the same bus.
+        """
+        self = cls.__new__(cls)
+        self._abi = get_abi()
+        self._ptr = self._abi.lib.motor_controller_new_dm_serial_mixed(serial_port.encode(), int(baud))
+        if not self._ptr:
+            raise CallError(f"new_dm_serial_mixed failed: {_err_text()}")
+        return self
+
+    @classmethod
+    def from_mixed(cls, channel: str = "can0") -> "Controller":
+        """Create a mixed-vendor controller over socketcan transport."""
+        self = cls.__new__(cls)
+        self._abi = get_abi()
+        self._ptr = self._abi.lib.motor_controller_new_mixed(channel.encode())
+        if not self._ptr:
+            raise CallError(f"new_mixed failed: {_err_text()}")
+        return self
+
     def close(self) -> None:
         if self._ptr:
             self._abi.lib.motor_controller_free(self._ptr)
